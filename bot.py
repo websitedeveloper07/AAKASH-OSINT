@@ -1,4 +1,5 @@
 import requests
+from io import BytesIO
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler,
@@ -39,12 +40,24 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text("ℹ️ Please send me the PSID to get the info.")
         return ASK_PSID_INFO
 
-# PSID → Pic
+# PSID → Pic (fixed with BytesIO)
 async def psid_to_pic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     psid = update.message.text.strip()
     url = f"http://aakashleap.com:3131/Content/ScoreToolImage/Output{psid}.jpg"
 
-    await update.message.reply_photo(photo=url, caption=f"Here is the picture for PSID: {psid}")
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200 and response.headers.get("Content-Type", "").startswith("image"):
+            image_bytes = BytesIO(response.content)
+            image_bytes.name = f"{psid}.jpg"
+
+            await update.message.reply_photo(photo=image_bytes, caption=f"Here is the picture for PSID: {psid}")
+        else:
+            await update.message.reply_text("❌ No valid image found for this PSID.")
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error fetching picture: {e}")
+
     return ConversationHandler.END
 
 # PSID → Info
