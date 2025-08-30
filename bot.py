@@ -107,7 +107,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     # Replace with your Bot Token
-    application = Application.builder().token("YOUR_TELEGRAM_BOT_TOKEN").build()
+    application = Application.builder().token("8252385992:AAFrqTjKwWrRQtC2ZX4RmtNObgayecDHAZw").build()
 
     conv_handler = ConversationHandler(
         entry_points=[CallbackQueryHandler(button)],
