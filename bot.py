@@ -1,3 +1,4 @@
+import requests
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler,
@@ -46,10 +47,38 @@ async def psid_to_pic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_photo(photo=url, caption=f"Here is the picture for PSID: {psid}")
     return ConversationHandler.END
 
-# PSID → Info (placeholder, update with real API if you have)
+# PSID → Info
 async def psid_to_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     psid = update.message.text.strip()
-    await update.message.reply_text(f"ℹ️ Info for PSID {psid} (API integration can be added here).")
+    api_url = f"https://learn.aakashitutor.com/api/getuserinfo?auth=true&email={psid}@aesl.in"
+
+    try:
+        response = requests.get(api_url, timeout=10)
+        data = response.json()
+
+        if not data:
+            await update.message.reply_text("❌ No info found for this PSID.")
+            return ConversationHandler.END
+
+        user = data[0]
+
+        # Clean fields we want to display
+        info = (
+            f"👤 Name: {user.get('title', 'N/A')}\n"
+            f"📧 Email: {user.get('email', 'N/A')}\n"
+            f"📱 Mobile: {user.get('mobile', 'N/A')}\n"
+            f"🎓 Role: {', '.join(user.get('roles', {}).values()) if user.get('roles') else 'N/A'}\n"
+            f"🆔 Username: {user.get('sso_username', 'N/A')}\n"
+            f"📅 Created: {user.get('created', 'N/A')}\n"
+            f"🏷️ Firstname: {user.get('firstname', 'N/A')}\n"
+            f"🏷️ Lastname: {user.get('lastname', 'N/A')}\n"
+        )
+
+        await update.message.reply_text(info)
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error fetching info: {e}")
+
     return ConversationHandler.END
 
 # Cancel
