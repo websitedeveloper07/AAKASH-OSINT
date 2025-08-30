@@ -23,9 +23,11 @@ logger = logging.getLogger(__name__)
 # States for conversation
 ASK_PSID_PIC, ASK_PSID_INFO = range(2)
 
-# -------- Helper: Stylish Box -------- #
+
+# -------- Helper: Box -------- #
 def box(content: str) -> str:
     return f"┏━━━━━━━⍟\n┃ {content}\n┗━━━━━━━━━━━⊛"
+
 
 # -------- Start Command -------- #
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -44,8 +46,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await update.message.reply_text(
-        box(welcome_text), parse_mode="MarkdownV2", reply_markup=reply_markup
+        welcome_text, parse_mode="MarkdownV2", reply_markup=reply_markup
     )
+
 
 # -------- Callback Buttons -------- #
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -58,6 +61,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="MarkdownV2",
         )
         return ASK_PSID_PIC
+
     elif query.data == "psid_info":
         await query.message.reply_text(
             box("ℹ️ Please send me the *PSID* for info lookup:"),
@@ -65,12 +69,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return ASK_PSID_INFO
 
-# -------- PSID to Pic -------- #
+
+# -------- PSID → Picture -------- #
 async def psid_to_pic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     psid = update.message.text.strip()
     url = f"http://aakashleap.com:3131/Content/ScoreToolImage/{psid}.jpg"
 
-    caption = "┏━━━━━━━⍟\n┃ 🖼 *Picture for PSID:* `{}`\n┗━━━━━━━━━━━⊛".format(psid)
+    caption = (
+        "┏━━━━━━━⍟\n"
+        "┃ 🖼 *My Aakash OSINT Picture:*\n"
+        "┗━━━━━━━━━━━⊛\n\n"
+        f"🆔 PSID: `{psid}`"
+    )
 
     try:
         async with httpx.AsyncClient() as client:
@@ -92,7 +102,8 @@ async def psid_to_pic(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return ConversationHandler.END
 
-# -------- PSID to Info -------- #
+
+# -------- PSID → Info -------- #
 async def psid_to_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     psid = update.message.text.strip()
     url = f"https://learn.aakashitutor.com/api/getuserinfo?auth=true&email={psid}@aesl.in"
@@ -104,7 +115,8 @@ async def psid_to_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if not data or not isinstance(data, list):
             await update.message.reply_text(
-                box("❌ No data found for this PSID."), parse_mode="MarkdownV2"
+                "```\n❌ No data found for this PSID.\n```",
+                parse_mode="MarkdownV2",
             )
             return ConversationHandler.END
 
@@ -127,17 +139,16 @@ async def psid_to_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             roles_text = "N/A"
 
-        # Title inside box
-        header_box = "┏━━━━━━━⍟\n┃ 📌 *My Aakash OSINT Results:*\n┗━━━━━━━━━━━⊛"
-
-        # Info below box
+        # Build info text inside backticks
         info_text = (
-            "```yaml\n"
+            "```\n"
+            "┏━━━━━━━⍟\n"
+            "┃ 📌 My Aakash OSINT Results:\n"
+            "┗━━━━━━━━━━━⊛\n\n"
             f"👤 Name       : {user.get('title', 'N/A')}\n"
             f"📧 Email      : {user.get('email', 'N/A')}\n"
             f"📱 Mobile     : {user.get('mobile', 'N/A')}\n"
             f"🆔 UID        : {user.get('uid', 'N/A')}\n"
-            f"🔑 Username   : {user.get('sso_username', 'N/A')}\n"
             f"🎓 Role       : {roles_text}\n"
             f"📅 Created    : {created_date}\n"
             f"🏷 Firstname  : {user.get('firstname', 'N/A')}\n"
@@ -145,17 +156,17 @@ async def psid_to_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "```"
         )
 
-        await update.message.reply_text(
-            f"{header_box}\n\n{info_text}", parse_mode="MarkdownV2"
-        )
+        await update.message.reply_text(info_text, parse_mode="MarkdownV2")
 
     except Exception as e:
         await update.message.reply_text(
-            f"┏━━━━━━━⍟\n┃ ❌ Error fetching info for `{psid}`\n┃ Error: `{e}`\n┗━━━━━━━━━━━⊛",
+            f"```\n┏━━━━━━━⍟\n┃ ❌ Error fetching info for {psid}\n┃ Error: {e}\n┗━━━━━━━━━━━⊛\n```",
             parse_mode="MarkdownV2",
         )
 
     return ConversationHandler.END
+
+
 
 # -------- Main -------- #
 def main():
@@ -179,6 +190,7 @@ def main():
 
     logger.info("✅ Bot started...")
     application.run_polling()
+
 
 if __name__ == "__main__":
     main()
