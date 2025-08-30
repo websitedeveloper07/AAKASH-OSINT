@@ -3,7 +3,7 @@ import requests
 import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, ConversationHandler, filters, ContextTypes
-from cookies import cookies, headers
+from cookies import cookies
 
 # Enable logging
 logging.basicConfig(
@@ -69,7 +69,7 @@ async def psid_to_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = f"https://learn.aakashitutor.com/api/getuserinfo?auth=true&email={psid}@aesl.in"
 
     try:
-        response = requests.get(url, cookies=cookies, headers=headers)
+        response = requests.get(url, cookies=cookies)
         data = response.json()
 
         if not data or not isinstance(data, list):
