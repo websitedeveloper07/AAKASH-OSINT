@@ -77,24 +77,21 @@ from telegram.ext import ContextTypes, ConversationHandler
 
 async def psid_to_pic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     psid = update.message.text.strip()
-    url = f"http://aakashleap.com:3131/Content/ScoreToolImage/{psid}.jpg"
-
-    caption = (
-        "┏━━━━━━━⍟\n"
-        "┃ 🖼 *My Aakash OSINT Picture:*\n"
-        "┗━━━━━━━━━━━⊛\n\n"
-        f"🆔 PSID: `{psid}`"
-    )
+    url = f"http://aakashleap.com:3131/Content/ScoreToolImage/Output{psid}.jpg"
 
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(url, timeout=15)
 
-            if resp.status_code == 200 and "image" in resp.headers.get("content-type", ""):
-                # ✅ Send directly via URL (Telegram fetches it itself)
+            if resp.status_code == 200 and "image" in resp.headers.get("content-type", "").lower():
                 await update.message.reply_photo(
                     photo=url,
-                    caption=caption,
+                    caption=(
+                        "┏━━━━━━━⍟\n"
+                        "┃ 🖼 *My Aakash OSINT Picture:*\n"
+                        "┗━━━━━━━━━━━⊛\n\n"
+                        f"🆔 PSID: `{psid}`"
+                    ),
                     parse_mode="MarkdownV2"
                 )
             else:
@@ -105,11 +102,12 @@ async def psid_to_pic(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         await update.message.reply_text(
-            f"┏━━━━━━━⍟\n┃ ❌ Could not fetch picture for `{psid}`\n┃ Error: `{e}`\n┗━━━━━━━━━━━⊛",
+            f"┏━━━━━━━⍟\n┃ ⚠️ Error fetching the picture\n┃ `{e}`\n┗━━━━━━━━━━━⊛",
             parse_mode="MarkdownV2",
         )
 
     return ConversationHandler.END
+
 
 
 
@@ -156,12 +154,12 @@ async def psid_to_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "┗━━━━━━━━━━━⊛\n\n"
 
             "```\n"
-            f"👤 Name       : {user.get('title', 'N/A')}\n"
-            f"📧 Email      : {user.get('email', 'N/A')}\n"
+            f"👤 Name      : {user.get('title', 'N/A')}\n"
+            f"📧 Email     : {user.get('email', 'N/A')}\n"
             f"📱 Mobile     : {user.get('mobile', 'N/A')}\n"
-            f"🆔 UID        : {user.get('uid', 'N/A')}\n"
-            f"🎓 Role       : {roles_text}\n"
-            f"📅 Created    : {created_date}\n"
+            f"🆔 UID       : {user.get('uid', 'N/A')}\n"
+            f"🎓 Role      : {roles_text}\n"
+            f"📅 Created   : {created_date}\n"
             f"🏷 Firstname  : {user.get('firstname', 'N/A')}\n"
             f"🏷 Lastname   : {user.get('lastname', 'N/A')}\n"
             "```"
