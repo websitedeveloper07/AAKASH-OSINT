@@ -11,7 +11,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     filters,
 )
-from cookies import cookies, headers
+from cookies import cookies
 
 # Logging
 logging.basicConfig(level=logging.INFO)
@@ -30,9 +30,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     welcome = (
-        "╔════════════════════════════╗\n"
+        "╔══════════════════╗\n"
         "║   🔎 Welcome to Aakash OSINT Bot   ║\n"
-        "╚════════════════════════════╝\n\n"
+        "╚═══════════════════════╝\n\n"
         "Choose an option below 👇"
     )
 
@@ -79,7 +79,7 @@ async def psid_to_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = f"https://learn.aakashitutor.com/api/getuserinfo?auth=true&email={psid}@aesl.in"
 
     try:
-        response = requests.get(url, cookies=cookies, headers=headers)
+        response = requests.get(url, cookies=cookies)
         if response.ok and response.text.strip() != "[]":
             user = response.json()[0]
 
