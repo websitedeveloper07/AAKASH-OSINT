@@ -71,6 +71,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # -------- PSID → Picture -------- #
+import httpx
+from telegram import Update
+from telegram.ext import ContextTypes, ConversationHandler
+
 async def psid_to_pic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     psid = update.message.text.strip()
     url = f"http://aakashleap.com:3131/Content/ScoreToolImage/{psid}.jpg"
@@ -85,22 +89,28 @@ async def psid_to_pic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(url, timeout=15)
-            if resp.status_code == 200 and resp.headers.get("content-type", "").startswith("image"):
+
+            if resp.status_code == 200 and "image" in resp.headers.get("content-type", ""):
+                # ✅ Send directly via URL (Telegram fetches it itself)
                 await update.message.reply_photo(
-                    photo=resp.content, caption=caption, parse_mode="MarkdownV2"
+                    photo=url,
+                    caption=caption,
+                    parse_mode="MarkdownV2"
                 )
             else:
                 await update.message.reply_text(
-                    box(f"❌ No valid picture found for `{psid}`"),
+                    f"┏━━━━━━━⍟\n┃ ❌ No valid picture found for `{psid}`\n┗━━━━━━━━━━━⊛",
                     parse_mode="MarkdownV2",
                 )
+
     except Exception as e:
         await update.message.reply_text(
-            box(f"❌ Could not fetch picture for `{psid}`\nError: `{e}`"),
+            f"┏━━━━━━━⍟\n┃ ❌ Could not fetch picture for `{psid}`\n┃ Error: `{e}`\n┗━━━━━━━━━━━⊛",
             parse_mode="MarkdownV2",
         )
 
     return ConversationHandler.END
+
 
 
 # -------- PSID → Info -------- #
@@ -141,10 +151,11 @@ async def psid_to_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Build info text inside backticks
         info_text = (
-            "```\n"
             "┏━━━━━━━⍟\n"
             "┃ 📌 My Aakash OSINT Results:\n"
             "┗━━━━━━━━━━━⊛\n\n"
+
+            "```\n"
             f"👤 Name       : {user.get('title', 'N/A')}\n"
             f"📧 Email      : {user.get('email', 'N/A')}\n"
             f"📱 Mobile     : {user.get('mobile', 'N/A')}\n"
