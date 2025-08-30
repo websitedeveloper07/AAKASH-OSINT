@@ -83,9 +83,11 @@ async def psid_to_pic(update: Update, context: ContextTypes.DEFAULT_TYPE):
         async with httpx.AsyncClient() as client:
             resp = await client.get(url, timeout=15)
 
-            if resp.status_code == 200 and "image" in resp.headers.get("content-type", "").lower():
+            content_type = resp.headers.get("content-type", "").lower()
+
+            if resp.status_code == 200 and content_type.startswith("image"):
                 await update.message.reply_photo(
-                    photo=url,
+                    photo=resp.content,   # send as bytes directly
                     caption=(
                         "┏━━━━━━━⍟\n"
                         "┃ 🖼 *My Aakash OSINT Picture:*\n"
@@ -95,8 +97,12 @@ async def psid_to_pic(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     parse_mode="MarkdownV2"
                 )
             else:
+                # Debug info (optional, you can remove later)
                 await update.message.reply_text(
-                    f"┏━━━━━━━⍟\n┃ ❌ No valid picture found for `{psid}`\n┗━━━━━━━━━━━⊛",
+                    f"┏━━━━━━━⍟\n"
+                    f"┃ ❌ No valid picture found for `{psid}`\n"
+                    f"┃ Server said: `{content_type}`\n"
+                    f"┗━━━━━━━━━━━⊛",
                     parse_mode="MarkdownV2",
                 )
 
